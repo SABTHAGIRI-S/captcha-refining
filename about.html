@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login - 3D Dice Captcha</title>
+  <title>3D Dice Captcha - Click the Odd Dice</title>
   <style>
-    /* Overall body styling with a gradient background */
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: sans-serif;
       background: linear-gradient(135deg, #00b4db, #0083b0);
       display: flex;
       justify-content: center;
@@ -15,163 +14,152 @@
       height: 100vh;
       margin: 0;
     }
-    /* Container for the login form and captcha */
     .container {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 30px 40px;
+      background: #fff;
+      padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-      width: 400px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       text-align: center;
     }
     h2 {
-      margin-top: 0;
+      margin-bottom: 20px;
       color: #333;
     }
-    input {
-      margin: 10px 0;
-      padding: 10px;
-      width: calc(100% - 22px);
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    p {
-      color: #555;
-      font-size: 14px;
-    }
-    /* Scene container for dice with perspective */
     .scene {
       display: flex;
-      gap: 20px;
+      flex-wrap: wrap;
+      gap: 30px; /* spacing to prevent overlapping during rotation */
       justify-content: center;
-      perspective: 600px;
+      perspective: 800px;
       margin: 20px 0;
     }
-    /* Dice styling: each dice is 3D with preserved transform style */
     .dice {
       width: 60px;
       height: 60px;
       position: relative;
       transform-style: preserve-3d;
+      cursor: pointer;
     }
-    /* Rotating dice animation */
-    .rotating {
-      animation: rotateDice 2s infinite linear;
+    /* 6 dice rotate in both X and Y axes */
+    .rotate-xy {
+      animation: rotateXY 2s infinite linear;
     }
-    /* Styling for each face of the dice */
+    /* Odd dice rotates only in the X axis */
+    .rotate-x {
+      animation: rotateX 2s infinite linear;
+    }
+    @keyframes rotateXY {
+      0%   { transform: rotateX(0deg) rotateY(0deg); }
+      100% { transform: rotateX(360deg) rotateY(360deg); }
+    }
+    @keyframes rotateX {
+      0%   { transform: rotateX(0deg); }
+      100% { transform: rotateX(360deg); }
+    }
     .face {
       position: absolute;
       width: 60px;
       height: 60px;
       background: #fff;
       border: 2px solid #333;
-      border-radius: 8px;
+      border-radius: 6px;
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
     }
-    /* Small dots on dice faces */
-    .dot {
-      width: 5px;
-      height: 5px;
-      background-color: #333;
-      border-radius: 50%;
-      position: absolute;
-    }
-    /* Positioning each face in 3D space */
+    /* Positioning the six faces */
     .front  { transform: translateZ(30px); }
     .back   { transform: rotateY(180deg) translateZ(30px); }
     .left   { transform: rotateY(-90deg) translateZ(30px); }
     .right  { transform: rotateY(90deg) translateZ(30px); }
     .top    { transform: rotateX(90deg) translateZ(30px); }
     .bottom { transform: rotateX(-90deg) translateZ(30px); }
-    @keyframes rotateDice {
-      0% { transform: rotateX(0deg) rotateY(0deg); }
-      100% { transform: rotateX(360deg) rotateY(360deg); }
-    }
-    /* Button styling */
-    button {
-      background: #0083b0;
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
-    }
-    button:hover {
-      background: #005f7a;
+    .dot {
+      width: 5px;
+      height: 5px;
+      background: #333;
+      border-radius: 50%;
+      position: absolute;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Login Validation</h2>
-    <input type="text" id="username" placeholder="Username or Email">
-    <input type="password" id="password" placeholder="Password">
-    <p>Enter the number on the top of the static dice to prove you're human</p>
-    <!-- Dice Captcha Scene -->
-    <div class="scene">
-      <div class="dice rotating" id="dice1"></div>
-      <div class="dice rotating" id="dice2"></div>
-      <div class="dice rotating" id="dice3"></div>
-      <div class="dice non-rotating" id="staticDice">
-        <!-- The static dice has an input on the top face -->
-        <div class="face top">
-          <input type="text" id="diceInput" placeholder="Enter Number">
-        </div>
-      </div>
+    <h2>Click the Odd Dice to Prove You're Human</h2>
+    <div class="scene" id="scene">
+      <!-- 7 dice will be generated here -->
     </div>
-    <button onclick="validateHuman()">Validate</button>
   </div>
   <script>
-    // Function to create dice faces with dots
-    function createDice(diceId) {
-      const dice = document.getElementById(diceId);
-      ["front", "back", "top", "bottom", "left", "right"].forEach(face => {
-        let div = document.createElement("div");
-        div.classList.add("face", face);
-        // Skip adding dots on the top face of the static dice (it has the input)
-        if (!(diceId === "staticDice" && face === "top")) {
-          addDots(div, face);
-        }
-        dice.appendChild(div);
-      });
-    }
-    // Function to add dots based on face type
-    function addDots(faceElement, face) {
-      const dotPositions = {
-        front: [[20, 20]],
-        back: [[10, 10], [30, 30]],
-        top: [[5, 5], [35, 35], [20, 20]],
-        bottom: [[5, 5], [35, 35], [5, 35], [35, 5]],
-        left: [[5, 5], [35, 35], [20, 20], [5, 35], [35, 5]],
-        right: [[5, 5], [35, 35], [5, 35], [35, 5], [20, 5], [20, 35]]
-      };
-      
-      dotPositions[face].forEach(([x, y]) => {
-        let dot = document.createElement("div");
-        dot.classList.add("dot");
-        dot.style.left = x + "px";
-        dot.style.top = y + "px";
-        faceElement.appendChild(dot);
-      });
-    }
-    // Create all dice
-    ["dice1", "dice2", "dice3", "staticDice"].forEach(createDice);
-    // Validation function to check the captcha
-    function validateHuman() {
-      let input = document.getElementById("diceInput").value;
-      let validNumbers = [4]; // Change this value to match the captcha (top face) number
-      if (validNumbers.includes(parseInt(input))) {
-        alert("You are human!");
+    // Choose one random value from 1 to 6 (never 0)
+    const diceValue = Math.floor(Math.random() * 6) + 1;
+    // Define dot positions for standard patterns:
+    // We'll use the dot pattern for the chosen diceValue.
+    // For simplicity, we'll predefine patterns for values 1 to 6.
+    const dotPatterns = {
+      1: [ [50,50] ],
+      2: [ [30,30], [70,70] ],
+      3: [ [30,30], [50,50], [70,70] ],
+      4: [ [30,30], [30,70], [70,30], [70,70] ],
+      5: [ [30,30], [30,70], [50,50], [70,30], [70,70] ],
+      6: [ [30,30], [30,50], [30,70], [70,30], [70,50], [70,70] ]
+    };
+    const dotPositions = dotPatterns[diceValue];
+
+    /**
+     * Creates a 3D dice element with a fixed dot pattern.
+     * @param {string} id - Unique id for the dice.
+     * @param {number} value - The dice value (dot pattern) for all faces.
+     * @param {boolean} isOdd - True if this dice is the odd one.
+     */
+    function createDiceElement(id, value, isOdd) {
+      const dice = document.createElement("div");
+      dice.classList.add("dice");
+      dice.id = id;
+      // Apply animation based on dice type.
+      if (isOdd) {
+        dice.classList.add("rotate-x");
       } else {
-        alert("Bot detected!");
+        dice.classList.add("rotate-xy");
       }
+      // Create 6 faces.
+      const faces = ["front", "back", "left", "right", "top", "bottom"];
+      faces.forEach(face => {
+        const faceDiv = document.createElement("div");
+        faceDiv.classList.add("face", face);
+        // Add the dot pattern for the given value.
+        dotPositions.forEach(pos => {
+          const dot = document.createElement("div");
+          dot.classList.add("dot");
+          dot.style.left = pos[0] + "%";
+          dot.style.top = pos[1] + "%";
+          faceDiv.appendChild(dot);
+        });
+        dice.appendChild(faceDiv);
+      });
+      // Click event for validation.
+      dice.addEventListener("click", function() {
+        if (isOdd) {
+          alert("You are human!");
+        } else {
+          alert("That's not the odd dice!");
+        }
+      });
+      return dice;
+    }
+
+    // Randomly pick an index (0-6) for the odd dice among 7 dice.
+    const oddIndex = Math.floor(Math.random() * 7);
+
+    // Generate 7 dice with the same dot pattern.
+    const scene = document.getElementById("scene");
+    for (let i = 0; i < 7; i++) {
+      let isOdd = (i === oddIndex);
+      const diceElem = createDiceElement("dice" + i, diceValue, isOdd);
+      scene.appendChild(diceElem);
     }
   </script>
 </body>
 </html>
+

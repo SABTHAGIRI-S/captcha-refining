@@ -3,34 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>3D Dice Captcha - Click the Odd Dice</title>
+  <title>Login - 3D Dice Captcha</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #00b4db, #0083b0);
+      margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
     }
     .container {
-      background: #fff;
-      padding: 20px;
+      background: rgba(255, 255, 255, 0.97);
+      padding: 30px 40px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      width: 50vw;           /* occupies half the viewport width */
+      max-width: 600px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .input-group {
+      margin: 10px 0;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .input-group input {
+      width: calc(100% - 12px);
+      padding: 6px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
     h2 {
-      margin-bottom: 20px;
+      margin: 20px 0 10px;
       color: #333;
     }
     .scene {
       display: flex;
-      flex-wrap: wrap;
-      gap: 30px; /* spacing to prevent overlapping during rotation */
+      gap: 20px;
       justify-content: center;
-      perspective: 800px;
+      perspective: 600px;
       margin: 20px 0;
     }
     .dice {
@@ -40,11 +60,11 @@
       transform-style: preserve-3d;
       cursor: pointer;
     }
-    /* 6 dice rotate in both X and Y axes */
+    /* 6 dice rotate on both X and Y axes */
     .rotate-xy {
       animation: rotateXY 2s infinite linear;
     }
-    /* Odd dice rotates only in the X axis */
+    /* Odd dice rotates only on the X axis */
     .rotate-x {
       animation: rotateX 2s infinite linear;
     }
@@ -82,21 +102,43 @@
       border-radius: 50%;
       position: absolute;
     }
+    button {
+      background: #0083b0;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #005f7a;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="input-group">
+      <label for="username">Username:</label>
+      <input type="text" id="username" placeholder="Enter your username">
+    </div>
+    <div class="input-group">
+      <label for="password">Password:</label>
+      <input type="password" id="password" placeholder="Enter your password">
+    </div>
     <h2>Click the Odd Dice to Prove You're Human</h2>
     <div class="scene" id="scene">
       <!-- 7 dice will be generated here -->
     </div>
+    <button onclick="validateLogin()">Login</button>
   </div>
   <script>
-    // Choose one random value from 1 to 6 (never 0)
+    let captchaAttempted = false; // ensures only one captcha attempt
+    let captchaPassed = false;    // flag to check if odd dice was clicked
+
+    // Choose one random dice dot pattern value from 1 to 6.
     const diceValue = Math.floor(Math.random() * 6) + 1;
-    // Define dot positions for standard patterns:
-    // We'll use the dot pattern for the chosen diceValue.
-    // For simplicity, we'll predefine patterns for values 1 to 6.
     const dotPatterns = {
       1: [ [50,50] ],
       2: [ [30,30], [70,70] ],
@@ -117,18 +159,15 @@
       const dice = document.createElement("div");
       dice.classList.add("dice");
       dice.id = id;
-      // Apply animation based on dice type.
       if (isOdd) {
         dice.classList.add("rotate-x");
       } else {
         dice.classList.add("rotate-xy");
       }
-      // Create 6 faces.
       const faces = ["front", "back", "left", "right", "top", "bottom"];
       faces.forEach(face => {
         const faceDiv = document.createElement("div");
         faceDiv.classList.add("face", face);
-        // Add the dot pattern for the given value.
         dotPositions.forEach(pos => {
           const dot = document.createElement("div");
           dot.classList.add("dot");
@@ -138,28 +177,50 @@
         });
         dice.appendChild(faceDiv);
       });
-      // Click event for validation.
       dice.addEventListener("click", function() {
+        if (captchaAttempted) {
+          alert("Captcha already attempted. Refresh to try again.");
+          return;
+        }
+        captchaAttempted = true;
         if (isOdd) {
-          alert("You are human!");
+          captchaPassed = true;
+          alert("Captcha passed. You are human!");
         } else {
-          alert("That's not the odd dice!");
+          captchaPassed = false;
+          alert("Captcha failed. That's not the odd dice!");
         }
       });
       return dice;
     }
-
+    
     // Randomly pick an index (0-6) for the odd dice among 7 dice.
     const oddIndex = Math.floor(Math.random() * 7);
-
-    // Generate 7 dice with the same dot pattern.
+    
     const scene = document.getElementById("scene");
     for (let i = 0; i < 7; i++) {
       let isOdd = (i === oddIndex);
       const diceElem = createDiceElement("dice" + i, diceValue, isOdd);
       scene.appendChild(diceElem);
     }
+    
+    function validateLogin() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!username || !password) {
+        alert("Please enter both username and password.");
+        return;
+      }
+      if (!captchaAttempted) {
+        alert("Please complete the captcha by clicking the odd dice.");
+        return;
+      }
+      if (captchaPassed) {
+        alert("Login successful. You are human!");
+      } else {
+        alert("Login failed. Captcha verification unsuccessful.");
+      }
+    }
   </script>
 </body>
 </html>
-

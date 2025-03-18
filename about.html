@@ -6,20 +6,21 @@
   <title>Login - 3D Dice Captcha</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #00b4db, #0083b0);
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    font-family: Arial, sans-serif;
+    background: url('botvs human.jpg') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
     }
     .container {
-      background: rgba(255, 255, 255, 0.97);
+      background: rgba(255,255,255,0.97);
       padding: 30px 40px;
       border-radius: 12px;
       box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-      width: 50vw;           /* occupies half the viewport width */
+      width: 50vw;
       max-width: 600px;
       text-align: center;
       position: relative;
@@ -32,7 +33,7 @@
     .input-group label {
       display: block;
       font-size: 14px;
-      color: #333;
+      color: #2c662d;
       margin-bottom: 4px;
     }
     .input-group input {
@@ -44,18 +45,18 @@
     }
     h2 {
       margin: 20px 0 10px;
-      color: #333;
+      color: #2c662d;
     }
     .scene {
       display: flex;
-      gap: 20px;
+      gap: 10px;  /* Small gap to avoid overlapping */
       justify-content: center;
       perspective: 600px;
       margin: 20px 0;
     }
     .dice {
-      width: 60px;
-      height: 60px;
+      width: 30px;
+      height: 30px;
       position: relative;
       transform-style: preserve-3d;
       cursor: pointer;
@@ -78,42 +79,42 @@
     }
     .face {
       position: absolute;
-      width: 60px;
-      height: 60px;
+      width: 30px;
+      height: 30px;
       background: #fff;
-      border: 2px solid #333;
-      border-radius: 6px;
+      border: 1px solid #333;
+      border-radius: 3px;
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+      box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
     }
-    /* Positioning the six faces */
-    .front  { transform: translateZ(30px); }
-    .back   { transform: rotateY(180deg) translateZ(30px); }
-    .left   { transform: rotateY(-90deg) translateZ(30px); }
-    .right  { transform: rotateY(90deg) translateZ(30px); }
-    .top    { transform: rotateX(90deg) translateZ(30px); }
-    .bottom { transform: rotateX(-90deg) translateZ(30px); }
+    /* For a 30px dice, half is 15px */
+    .front  { transform: translateZ(15px); }
+    .back   { transform: rotateY(180deg) translateZ(15px); }
+    .left   { transform: rotateY(-90deg) translateZ(15px); }
+    .right  { transform: rotateY(90deg) translateZ(15px); }
+    .top    { transform: rotateX(90deg) translateZ(15px); }
+    .bottom { transform: rotateX(-90deg) translateZ(15px); }
     .dot {
-      width: 5px;
-      height: 5px;
+      width: 3px;
+      height: 3px;
       background: #333;
       border-radius: 50%;
       position: absolute;
     }
     button {
-      background: #0083b0;
+      background: #56ab2f;
       color: #fff;
       border: none;
-      padding: 12px 20px;
+      padding: 10px 16px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
       margin-top: 10px;
     }
     button:hover {
-      background: #005f7a;
+      background: #3d7d32;
     }
   </style>
 </head>
@@ -134,11 +135,11 @@
     <button onclick="validateLogin()">Login</button>
   </div>
   <script>
-    let captchaAttempted = false; // ensures only one captcha attempt
-    let captchaPassed = false;    // flag to check if odd dice was clicked
-
+    let captchaAttempted = false;
+    let captchaPassed = false;
     // Choose one random dice dot pattern value from 1 to 6.
     const diceValue = Math.floor(Math.random() * 6) + 1;
+    // Predefined dot patterns for values 1 to 6.
     const dotPatterns = {
       1: [ [50,50] ],
       2: [ [30,30], [70,70] ],
@@ -148,13 +149,6 @@
       6: [ [30,30], [30,50], [30,70], [70,30], [70,50], [70,70] ]
     };
     const dotPositions = dotPatterns[diceValue];
-
-    /**
-     * Creates a 3D dice element with a fixed dot pattern.
-     * @param {string} id - Unique id for the dice.
-     * @param {number} value - The dice value (dot pattern) for all faces.
-     * @param {boolean} isOdd - True if this dice is the odd one.
-     */
     function createDiceElement(id, value, isOdd) {
       const dice = document.createElement("div");
       dice.classList.add("dice");
@@ -193,17 +187,14 @@
       });
       return dice;
     }
-    
     // Randomly pick an index (0-6) for the odd dice among 7 dice.
     const oddIndex = Math.floor(Math.random() * 7);
-    
     const scene = document.getElementById("scene");
     for (let i = 0; i < 7; i++) {
       let isOdd = (i === oddIndex);
       const diceElem = createDiceElement("dice" + i, diceValue, isOdd);
       scene.appendChild(diceElem);
     }
-    
     function validateLogin() {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
